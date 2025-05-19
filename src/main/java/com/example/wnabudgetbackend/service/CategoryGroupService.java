@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryGroupService {
@@ -22,7 +23,7 @@ public class CategoryGroupService {
         this.userRepo = userRepo;
     }
 
-    public CategoryGroup createGroup(CategoryGroupRequest request) {
+    public CategoryGroupRequest createGroup(CategoryGroupRequest request) {
         if (request.getId() != null && categoryGroupRepo.existsById(request.getId())) {
             throw new RuntimeException("Category group with this ID already exists.");
         }
@@ -33,23 +34,32 @@ public class CategoryGroupService {
         group.setUser(user);
         group.setName(request.getName());
 
-        return categoryGroupRepo.save(group);
+        group = categoryGroupRepo.save(group);
+        return new CategoryGroupRequest(group);
     }
 
-    public Optional<CategoryGroup> getGroup(UUID id) {
-        return categoryGroupRepo.findById(id);
+    public Optional<CategoryGroupRequest> getGroup(UUID id) {
+        return categoryGroupRepo.findById(id)
+                .map(CategoryGroupRequest::new);
     }
 
-    public List<CategoryGroup> getGroupsByUser(UUID userId) {
-        return categoryGroupRepo.findByUserId(userId);
+    public List<CategoryGroupRequest> getGroupsByUser(UUID userId) {
+        return categoryGroupRepo.findByUserId(userId).stream()
+                .map(CategoryGroupRequest::new)
+                .collect(Collectors.toList());
     }
 
-    public CategoryGroup updateGroup(CategoryGroupRequest request) {
-        userRepo.findById(request.getUser_id()).orElseThrow(() -> new RuntimeException("User not found"));
-        return categoryGroupRepo.findById(request.getId()).map(group -> {
-            group.setName(request.getName());
-            return categoryGroupRepo.save(group);
-        }).orElseThrow();
+    public CategoryGroupRequest updateGroup(CategoryGroupRequest request) {
+        userRepo.findById(request.getUser_id())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        CategoryGroup group = categoryGroupRepo.findById(request.getId())
+                .orElseThrow(() -> new RuntimeException("Category group not found"));
+
+        group.setName(request.getName());
+
+        group = categoryGroupRepo.save(group);
+        return new CategoryGroupRequest(group);
     }
 
     public void deleteGroup(UUID id) {

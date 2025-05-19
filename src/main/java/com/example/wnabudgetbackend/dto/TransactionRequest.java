@@ -1,5 +1,6 @@
 package com.example.wnabudgetbackend.dto;
 
+import com.example.wnabudgetbackend.model.Transaction;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,5 +35,17 @@ public class TransactionRequest {
     private LocalDate date;
 
     private boolean cleared;
+
+    public TransactionRequest(Transaction transactionRequest) {
+        id = transactionRequest.getId();
+        user_id = transactionRequest.getUser().getId();
+        account_id = transactionRequest.getAccount().getId();
+        category_id = transactionRequest.getCategory().getId();
+        amount = transactionRequest.getAmount();
+        payee = transactionRequest.getPayee();
+        memo = transactionRequest.getMemo();
+        date = transactionRequest.getDate();
+        cleared = transactionRequest.isCleared();
+    }
 
 }

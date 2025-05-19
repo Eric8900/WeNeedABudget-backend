@@ -20,27 +20,27 @@ public class AccountController {
     }
 
     @PostMapping
-    public Account createAccount(@RequestBody AccountRequest request) {
+    public AccountRequest createAccount(@RequestBody AccountRequest request) {
         return accountService.createAccount(request);
     }
 
     @GetMapping("/{id}")
-    public Optional<Account> getAccount(@PathVariable UUID id) {
+    public Optional<AccountRequest> getAccount(@PathVariable UUID id) {
         return accountService.getAccount(id);
     }
 
     @GetMapping("/user/{userId}")
-    public List<Account> getAccountsByUser(@PathVariable UUID userId) {
+    public List<AccountRequest> getAccountsByUser(@PathVariable UUID userId) {
         return accountService.getAccountsByUser(userId);
     }
 
     @PutMapping()
-    public Account updateAccount(@RequestBody AccountRequest request) {
+    public AccountRequest updateAccount(@RequestBody AccountRequest request) {
         return accountService.updateAccount(request.getId(), request);
     }
 
     @PutMapping("/{id}")
-    public Account updateAccountById(@PathVariable UUID id, @RequestBody AccountRequest request) {
+    public AccountRequest updateAccountById(@PathVariable UUID id, @RequestBody AccountRequest request) {
         return accountService.updateAccount(id, request);
     }
 

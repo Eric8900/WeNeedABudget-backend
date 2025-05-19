@@ -20,22 +20,22 @@ public class CategoryGroupController {
     }
 
     @PostMapping
-    public CategoryGroup createGroup(@RequestBody CategoryGroupRequest request) {
+    public CategoryGroupRequest createGroup(@RequestBody CategoryGroupRequest request) {
         return categoryGroupService.createGroup(request);
     }
 
     @GetMapping("/{id}")
-    public Optional<CategoryGroup> getGroup(@PathVariable UUID id) {
+    public Optional<CategoryGroupRequest> getGroup(@PathVariable UUID id) {
         return categoryGroupService.getGroup(id);
     }
 
     @GetMapping("/user/{userId}")
-    public List<CategoryGroup> getGroupsByUser(@PathVariable UUID userId) {
+    public List<CategoryGroupRequest> getGroupsByUser(@PathVariable UUID userId) {
         return categoryGroupService.getGroupsByUser(userId);
     }
 
     @PutMapping()
-    public CategoryGroup updateGroup(@RequestBody CategoryGroupRequest request) {
+    public CategoryGroupRequest updateGroup(@RequestBody CategoryGroupRequest request) {
         return categoryGroupService.updateGroup(request);
     }
 

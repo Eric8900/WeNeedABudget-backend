@@ -20,27 +20,27 @@ public class CategoryController {
     }
 
     @PostMapping
-    public Category createCategory(@RequestBody CategoryRequest request) {
+    public CategoryRequest createCategory(@RequestBody CategoryRequest request) {
         return categoryService.createCategory(request);
     }
 
     @GetMapping("/{id}")
-    public Optional<Category> getCategory(@PathVariable UUID id) {
+    public Optional<CategoryRequest> getCategory(@PathVariable UUID id) {
         return categoryService.getCategory(id);
     }
 
     @GetMapping("/user/{userId}")
-    public List<Category> getCategoriesByUser(@PathVariable UUID userId) {
+    public List<CategoryRequest> getCategoriesByUser(@PathVariable UUID userId) {
         return categoryService.getCategoriesByUser(userId);
     }
 
     @GetMapping("/group/{groupId}")
-    public List<Category> getCategoriesByGroup(@PathVariable UUID groupId) {
+    public List<CategoryRequest> getCategoriesByGroup(@PathVariable UUID groupId) {
         return categoryService.getCategoriesByGroup(groupId);
     }
 
     @PutMapping
-    public Category updateCategory(@RequestBody CategoryRequest request) {
+    public CategoryRequest updateCategory(@RequestBody CategoryRequest request) {
         return categoryService.updateCategory(request);
     }
 

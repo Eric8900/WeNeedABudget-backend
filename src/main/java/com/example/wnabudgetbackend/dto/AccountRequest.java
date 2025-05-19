@@ -1,5 +1,6 @@
 package com.example.wnabudgetbackend.dto;
 
+import com.example.wnabudgetbackend.model.Account;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -26,4 +27,11 @@ public class AccountRequest {
     @Column(nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
 
+    public AccountRequest(Account account) {
+        this.id = account.getId();
+        this.user_id = account.getUser().getId();
+        this.name = account.getName();
+        this.type = account.getType();
+        this.balance = account.getBalance();
+    }
 }

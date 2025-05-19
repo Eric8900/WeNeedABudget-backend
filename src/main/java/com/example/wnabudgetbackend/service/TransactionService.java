@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionService {
@@ -28,14 +29,17 @@ public class TransactionService {
         this.categoryRepository = categoryRepository;
     }
 
-    public Transaction createTransaction(TransactionRequest request) {
+    public TransactionRequest createTransaction(TransactionRequest request) {
         if (request.getId() != null && transactionRepository.existsById(request.getId())) {
             throw new RuntimeException("Transaction with this ID already exists.");
         }
+
         User user = userRepository.findById(request.getUser_id())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
         Account account = accountRepository.findById(request.getAccount_id())
                 .orElseThrow(() -> new RuntimeException("Account not found"));
+
         Category category = categoryRepository.findById(request.getCategory_id())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
@@ -47,49 +51,61 @@ public class TransactionService {
         tx.setPayee(request.getPayee());
         tx.setMemo(request.getMemo());
         tx.setCleared(request.isCleared());
+        tx.setDate(request.getDate());
 
-        BigDecimal newBalance = account.getBalance().add(tx.getAmount());
-        account.setBalance(newBalance);
+        // Update account balance
+        account.setBalance(account.getBalance().add(tx.getAmount()));
         accountRepository.save(account);
 
-        BigDecimal newActivity = category.getActivity().add(tx.getAmount());
-        BigDecimal newAvailable = category.getAvailable().add(tx.getAmount());
-        category.setActivity(newActivity);
-        category.setAvailable(newAvailable);
+        // Update category activity and available
+        category.setActivity(category.getActivity().add(tx.getAmount()));
+        category.setAvailable(category.getAvailable().add(tx.getAmount()));
         categoryRepository.save(category);
 
-        return transactionRepository.save(tx);
+        tx = transactionRepository.save(tx);
+        return new TransactionRequest(tx);
     }
 
-    public Optional<Transaction> getTransaction(UUID id) {
-        return transactionRepository.findById(id);
+    public Optional<TransactionRequest> getTransaction(UUID id) {
+        return transactionRepository.findById(id)
+                .map(TransactionRequest::new);
     }
 
-    public List<Transaction> getTransactionsByUser(UUID userId) {
-        return transactionRepository.findByUserId(userId);
+    public List<TransactionRequest> getTransactionsByUser(UUID userId) {
+        return transactionRepository.findByUserId(userId).stream()
+                .map(TransactionRequest::new)
+                .collect(Collectors.toList());
     }
 
-    public List<Transaction> getTransactionsByAccount(UUID accountId) {
-        return transactionRepository.findByAccountId(accountId);
+    public List<TransactionRequest> getTransactionsByAccount(UUID accountId) {
+        return transactionRepository.findByAccountId(accountId).stream()
+                .map(TransactionRequest::new)
+                .collect(Collectors.toList());
     }
 
-    public Transaction updateTransaction(UUID id, TransactionRequest updatedTx) {
+    public TransactionRequest updateTransaction(UUID id, TransactionRequest updatedTx) {
         userRepository.findById(updatedTx.getUser_id())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
         Account account = accountRepository.findById(updatedTx.getAccount_id())
                 .orElseThrow(() -> new RuntimeException("Account not found"));
+
         Category category = categoryRepository.findById(updatedTx.getCategory_id())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
-        return transactionRepository.findById(id).map(tx -> {
-            tx.setAmount(updatedTx.getAmount());
-            tx.setPayee(updatedTx.getPayee());
-            tx.setMemo(updatedTx.getMemo());
-            tx.setDate(updatedTx.getDate());
-            tx.setCleared(updatedTx.isCleared());
-            tx.setAccount(account);
-            tx.setCategory(category);
-            return transactionRepository.save(tx);
-        }).orElseThrow();
+
+        Transaction tx = transactionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+
+        tx.setAmount(updatedTx.getAmount());
+        tx.setPayee(updatedTx.getPayee());
+        tx.setMemo(updatedTx.getMemo());
+        tx.setDate(updatedTx.getDate());
+        tx.setCleared(updatedTx.isCleared());
+        tx.setAccount(account);
+        tx.setCategory(category);
+
+        tx = transactionRepository.save(tx);
+        return new TransactionRequest(tx);
     }
 
     public void deleteTransaction(UUID id) {

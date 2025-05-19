@@ -21,28 +21,27 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@RequestBody TransactionRequest transaction) {
-        Transaction saved = transactionService.createTransaction(transaction);
-        return ResponseEntity.ok(saved);
+    public TransactionRequest createTransaction(@RequestBody TransactionRequest transaction) {
+        return transactionService.createTransaction(transaction);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Transaction>> getTransaction(@PathVariable UUID id) {
+    public ResponseEntity<Optional<TransactionRequest>> getTransaction(@PathVariable UUID id) {
         return ResponseEntity.ok(transactionService.getTransaction(id));
     }
 
     @GetMapping("/user/{userId}")
-    public List<Transaction> getTransactionsByUser(@PathVariable UUID userId) {
+    public List<TransactionRequest> getTransactionsByUser(@PathVariable UUID userId) {
         return transactionService.getTransactionsByUser(userId);
     }
 
     @GetMapping("/account/{accountId}")
-    public List<Transaction> getTransactionsByAccount(@PathVariable UUID accountId) {
+    public List<TransactionRequest> getTransactionsByAccount(@PathVariable UUID accountId) {
         return transactionService.getTransactionsByAccount(accountId);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Transaction> updateTransaction(@PathVariable UUID id, @RequestBody TransactionRequest updatedTx) {
+    public ResponseEntity<TransactionRequest> updateTransaction(@PathVariable UUID id, @RequestBody TransactionRequest updatedTx) {
         return ResponseEntity.ok(transactionService.updateTransaction(id, updatedTx));
     }
 

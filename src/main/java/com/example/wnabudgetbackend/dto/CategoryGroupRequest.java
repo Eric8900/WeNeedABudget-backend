@@ -1,5 +1,6 @@
 package com.example.wnabudgetbackend.dto;
 
+import com.example.wnabudgetbackend.model.CategoryGroup;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,4 +21,9 @@ public class CategoryGroupRequest {
     @Column(nullable = false)
     private String name;
 
+    public CategoryGroupRequest(CategoryGroup categoryGroup) {
+        this.id = categoryGroup.getId();
+        this.name = categoryGroup.getName();
+        this.user_id = categoryGroup.getUser().getId();
+    }
 }

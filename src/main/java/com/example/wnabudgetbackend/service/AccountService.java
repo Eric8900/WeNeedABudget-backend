@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class AccountService {
@@ -22,10 +23,11 @@ public class AccountService {
         this.userRepository = userRepository;
     }
 
-    public Account createAccount(AccountRequest request) {
+    public AccountRequest createAccount(AccountRequest request) {
         if (request.getId() != null && accountRepository.existsById(request.getId())) {
             throw new RuntimeException("Account with this ID already exists.");
         }
+
         User user = userRepository.findById(request.getUser_id())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -35,27 +37,34 @@ public class AccountService {
         account.setType(request.getType());
         account.setBalance(request.getBalance());
 
-        return accountRepository.save(account);
+        account = accountRepository.save(account);
+        return new AccountRequest(account);
     }
 
-    public Optional<Account> getAccount(UUID id) {
-        return accountRepository.findById(id);
+    public Optional<AccountRequest> getAccount(UUID id) {
+        return accountRepository.findById(id)
+                .map(AccountRequest::new);
     }
 
-    public List<Account> getAccountsByUser(UUID userId) {
-        return accountRepository.findByUserId(userId);
+    public List<AccountRequest> getAccountsByUser(UUID userId) {
+        return accountRepository.findByUserId(userId).stream()
+                .map(AccountRequest::new)
+                .collect(Collectors.toList());
     }
 
-    public Account updateAccount(UUID id, AccountRequest request) {
+    public AccountRequest updateAccount(UUID id, AccountRequest request) {
         userRepository.findById(request.getUser_id())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return accountRepository.findById(id).map(account -> {
-            account.setName(request.getName());
-            account.setType(request.getType());
-            account.setBalance(request.getBalance());
 
-            return accountRepository.save(account);
-        }).orElseThrow();
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        account.setName(request.getName());
+        account.setType(request.getType());
+        account.setBalance(request.getBalance());
+
+        account = accountRepository.save(account);
+        return new AccountRequest(account);
     }
 
     public void deleteAccount(UUID id) {
