@@ -23,7 +23,7 @@ public class CategoryService {
 
     public CategoryService(CategoryRepository categoryRepo,
                            UserRepository userRepo,
-                           CategoryGroupRepository groupRepo, AccountRepository accountRepository) {
+                           CategoryGroupRepository groupRepo) {
         this.categoryRepo = categoryRepo;
         this.userRepo = userRepo;
         this.groupRepo = groupRepo;
