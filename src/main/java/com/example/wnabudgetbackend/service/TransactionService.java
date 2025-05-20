@@ -3,9 +3,10 @@ package com.example.wnabudgetbackend.service;
 import com.example.wnabudgetbackend.dto.TransactionRequest;
 import com.example.wnabudgetbackend.model.*;
 import com.example.wnabudgetbackend.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +28,12 @@ public class TransactionService {
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
+    }
+
+    public UUID getAccountUserId(UUID accountId) {
+        return accountRepository.findById(accountId)
+                .map(account -> account.getUser().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
     }
 
     public TransactionRequest createTransaction(TransactionRequest request) {
@@ -51,7 +58,7 @@ public class TransactionService {
         tx.setPayee(request.getPayee());
         tx.setMemo(request.getMemo());
         tx.setCleared(request.isCleared());
-        tx.setDate(request.getDate());
+        tx.setDate(LocalDate.now());
 
         // Update account balance
         account.setBalance(account.getBalance().add(tx.getAmount()));
@@ -99,7 +106,7 @@ public class TransactionService {
         tx.setAmount(updatedTx.getAmount());
         tx.setPayee(updatedTx.getPayee());
         tx.setMemo(updatedTx.getMemo());
-        tx.setDate(updatedTx.getDate());
+        tx.setDate(LocalDate.now());
         tx.setCleared(updatedTx.isCleared());
         tx.setAccount(account);
         tx.setCategory(category);

@@ -2,14 +2,12 @@ package com.example.wnabudgetbackend.dto;
 
 import com.example.wnabudgetbackend.model.CategoryGroup;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class CategoryGroupRequest {
 

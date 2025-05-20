@@ -1,14 +1,12 @@
 package com.example.wnabudgetbackend.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.UUID;
 
 @Entity
-@Getter
-@Setter
+@Data
 @Table(name = "users")
 public class User {
 
@@ -19,7 +17,11 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column
+    private String passwordHash;
+
     @Column(nullable = false)
-    private String passwordHash; // for now, plain text (can upgrade later)
+    @Enumerated(EnumType.STRING)
+    private AuthProvider authProvider;
 
 }

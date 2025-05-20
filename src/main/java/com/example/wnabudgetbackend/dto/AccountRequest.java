@@ -4,12 +4,11 @@ import com.example.wnabudgetbackend.model.Account;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.UUID;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
 @NoArgsConstructor
 public class AccountRequest {
 

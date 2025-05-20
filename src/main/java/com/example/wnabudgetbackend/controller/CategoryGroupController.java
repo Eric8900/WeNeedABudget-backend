@@ -1,11 +1,12 @@
 package com.example.wnabudgetbackend.controller;
 
 import com.example.wnabudgetbackend.dto.CategoryGroupRequest;
-import com.example.wnabudgetbackend.model.CategoryGroup;
 import com.example.wnabudgetbackend.service.CategoryGroupService;
+import com.example.wnabudgetbackend.config.SecurityUtil;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,33 +15,62 @@ import java.util.UUID;
 public class CategoryGroupController {
 
     private final CategoryGroupService categoryGroupService;
+    private final SecurityUtil securityUtil;
 
-    public CategoryGroupController(CategoryGroupService categoryGroupService) {
+    public CategoryGroupController(CategoryGroupService categoryGroupService, SecurityUtil securityUtil) {
         this.categoryGroupService = categoryGroupService;
+        this.securityUtil = securityUtil;
     }
 
     @PostMapping
-    public CategoryGroupRequest createGroup(@RequestBody CategoryGroupRequest request) {
-        return categoryGroupService.createGroup(request);
+    public ResponseEntity<?> createGroup(@RequestBody CategoryGroupRequest request) {
+        if (!securityUtil.isAuthorized(request.getUser_id())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoryGroupService.createGroup(request));
     }
 
     @GetMapping("/{id}")
-    public Optional<CategoryGroupRequest> getGroup(@PathVariable UUID id) {
-        return categoryGroupService.getGroup(id);
+    public ResponseEntity<?> getGroup(@PathVariable UUID id) {
+        Optional<CategoryGroupRequest> group = categoryGroupService.getGroup(id);
+        if (group.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        UUID userId = group.get().getUser_id();
+        if (!securityUtil.isAuthorized(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+
+        return ResponseEntity.ok(group.get());
     }
 
     @GetMapping("/user/{userId}")
-    public List<CategoryGroupRequest> getGroupsByUser(@PathVariable UUID userId) {
-        return categoryGroupService.getGroupsByUser(userId);
+    public ResponseEntity<?> getGroupsByUser(@PathVariable UUID userId) {
+        if (!securityUtil.isAuthorized(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+        return ResponseEntity.ok(categoryGroupService.getGroupsByUser(userId));
     }
 
-    @PutMapping()
-    public CategoryGroupRequest updateGroup(@RequestBody CategoryGroupRequest request) {
-        return categoryGroupService.updateGroup(request);
+    @PutMapping
+    public ResponseEntity<?> updateGroup(@RequestBody CategoryGroupRequest request) {
+        if (!securityUtil.isAuthorized(request.getUser_id())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+        return ResponseEntity.ok(categoryGroupService.updateGroup(request));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteGroup(@PathVariable UUID id) {
+    public ResponseEntity<?> deleteGroup(@PathVariable UUID id) {
+        Optional<CategoryGroupRequest> groupRequestOptional = categoryGroupService.getGroup(id);
+        if (groupRequestOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Category group not found");
+        }
+        if (!securityUtil.isAuthorized(groupRequestOptional.get().getUser_id())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
         categoryGroupService.deleteGroup(id);
+        return ResponseEntity.noContent().build();
     }
 }

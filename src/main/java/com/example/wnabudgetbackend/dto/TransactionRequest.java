@@ -2,16 +2,14 @@ package com.example.wnabudgetbackend.dto;
 
 import com.example.wnabudgetbackend.model.Transaction;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class TransactionRequest {
 

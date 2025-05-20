@@ -2,6 +2,8 @@ package com.example.wnabudgetbackend.controller;
 
 import com.example.wnabudgetbackend.model.User;
 import com.example.wnabudgetbackend.repository.UserRepository;
+import com.example.wnabudgetbackend.config.SecurityUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,29 +14,29 @@ import java.util.UUID;
 public class UserController {
 
     private final UserRepository repository;
+    private final SecurityUtil securityUtil;
 
-    public UserController(UserRepository repository) {
+    public UserController(UserRepository repository, SecurityUtil securityUtil) {
         this.repository = repository;
-    }
-
-    @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody User user) {
-        if (repository.findByEmail(user.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email already registered.");
-        }
-        return ResponseEntity.ok(repository.save(user));
+        this.securityUtil = securityUtil;
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUser(@PathVariable UUID id) {
-        return repository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return repository.findById(id).map(user -> {
+            if (!securityUtil.isAuthorized(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+            }
+            return ResponseEntity.ok(user);
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody User updated) {
         return repository.findById(id).map(user -> {
+            if (!securityUtil.isAuthorized(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+            }
             user.setEmail(updated.getEmail());
             user.setPasswordHash(updated.getPasswordHash());
             return ResponseEntity.ok(repository.save(user));
@@ -43,8 +45,12 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
-        if (!repository.existsById(id)) return ResponseEntity.notFound().build();
-        repository.deleteById(id);
-        return ResponseEntity.ok().build();
+        return repository.findById(id).map(user -> {
+            if (!securityUtil.isAuthorized(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+            }
+            repository.delete(user);
+            return ResponseEntity.ok().build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 }
