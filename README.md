@@ -4,10 +4,15 @@ This project was meant to learn more about backend development while building so
 ## Functionality
 WNAB is a CRUD budgeting app for creating smart budgets where every dollar of your account is allocated to some meaningful category of your life.
 
+- RESTful CRUD function endpoints for each table of the database (see database structure below)
+- Email and Password authentication using JWT tokens
+- OAuth authentication with Google
+
 ## Technologies Used
 - Java
-- Spring Boot
+- Java Spring Boot
 - PostgreSQL
+- JWT + OAuth
 - AWS Lambda
 - AWS RDS
 - AWS API Gateway
