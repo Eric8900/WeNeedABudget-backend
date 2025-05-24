@@ -23,6 +23,12 @@ public class CategoryRequest {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
+    private int month;
+
+    @Column(nullable = false)
+    private int year;
+
     private BigDecimal budgetedAmount = BigDecimal.ZERO;
     private BigDecimal activity = BigDecimal.ZERO;
     private BigDecimal available = BigDecimal.ZERO;
@@ -32,6 +38,8 @@ public class CategoryRequest {
         this.user_id = category.getUser().getId();
         this.group_id = category.getGroup().getId();
         this.name = category.getName();
+        this.month = category.getMonth();
+        this.year = category.getYear();
         this.budgetedAmount = category.getBudgetedAmount();
         this.activity = category.getActivity();
         this.available = category.getAvailable();

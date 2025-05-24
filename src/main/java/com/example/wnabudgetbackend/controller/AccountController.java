@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -64,6 +65,6 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
         }
         accountService.deleteAccount(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(Map.of("message", "Account deleted"));
     }
 }

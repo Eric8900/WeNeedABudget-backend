@@ -1,17 +1,17 @@
 package com.example.wnabudgetbackend.config;
 
-import com.example.wnabudgetbackend.dto.UserDTO;
 import com.example.wnabudgetbackend.model.AuthProvider;
 import com.example.wnabudgetbackend.model.User;
 import com.example.wnabudgetbackend.repository.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 
@@ -20,7 +20,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     @Autowired private UserRepository userRepo;
     @Autowired private JwtUtil jwtUtil;
-    @Autowired private ObjectMapper objectMapper;
+
+    @Value("${frontend.url}")
+    private String URL;
+
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -37,14 +40,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         });
 
         String token = jwtUtil.generateToken(email);
-        UserDTO uDTO = new UserDTO();
-        uDTO.setToken(token);
-        uDTO.setUser_id(user.getId());
-        // Return token in response body (since no frontend)
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.setStatus(HttpServletResponse.SC_OK);
+        String userId = user.getId().toString();
 
-        objectMapper.writeValue(response.getWriter(), uDTO);
+        String redirectUrl = UriComponentsBuilder
+                .fromUriString(URL + "/oauth-success")
+                .queryParam("token", token)
+                .queryParam("user_id", userId)
+                .build().toUriString();
+
+        response.sendRedirect(redirectUrl);
     }
 }

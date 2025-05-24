@@ -1,6 +1,5 @@
 package com.example.wnabudgetbackend.controller;
 
-import com.example.wnabudgetbackend.model.User;
 import com.example.wnabudgetbackend.repository.UserRepository;
 import com.example.wnabudgetbackend.config.SecurityUtil;
 import org.springframework.http.HttpStatus;
@@ -28,18 +27,6 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
             }
             return ResponseEntity.ok(user);
-        }).orElse(ResponseEntity.notFound().build());
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody User updated) {
-        return repository.findById(id).map(user -> {
-            if (!securityUtil.isAuthorized(user.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
-            }
-            user.setEmail(updated.getEmail());
-            user.setPasswordHash(updated.getPasswordHash());
-            return ResponseEntity.ok(repository.save(user));
         }).orElse(ResponseEntity.notFound().build());
     }
 

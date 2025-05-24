@@ -1,10 +1,12 @@
 package com.example.wnabudgetbackend.service;
 
 import com.example.wnabudgetbackend.dto.CategoryGroupRequest;
+import com.example.wnabudgetbackend.dto.patch.CategoryGroupPatch;
 import com.example.wnabudgetbackend.model.CategoryGroup;
 import com.example.wnabudgetbackend.model.User;
 import com.example.wnabudgetbackend.repository.CategoryGroupRepository;
 import com.example.wnabudgetbackend.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -44,22 +46,19 @@ public class CategoryGroupService {
     }
 
     public List<CategoryGroupRequest> getGroupsByUser(UUID userId) {
-        return categoryGroupRepo.findByUserId(userId).stream()
+        return categoryGroupRepo.findAllByUserIdOrderByNameAsc(userId).stream()
                 .map(CategoryGroupRequest::new)
                 .collect(Collectors.toList());
     }
 
-    public CategoryGroupRequest updateGroup(CategoryGroupRequest request) {
-        userRepo.findById(request.getUser_id())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public CategoryGroupRequest patchGroup(UUID id, CategoryGroupPatch patch) {
+        CategoryGroup grp = categoryGroupRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found"));
 
-        CategoryGroup group = categoryGroupRepo.findById(request.getId())
-                .orElseThrow(() -> new RuntimeException("Category group not found"));
+        if (patch.getName() != null) grp.setName(patch.getName());
 
-        group.setName(request.getName());
-
-        group = categoryGroupRepo.save(group);
-        return new CategoryGroupRequest(group);
+        grp = categoryGroupRepo.save(grp);
+        return new CategoryGroupRequest(grp);
     }
 
     public void deleteGroup(UUID id) {

@@ -7,14 +7,12 @@ import com.example.wnabudgetbackend.dto.UserDTO;
 import com.example.wnabudgetbackend.model.AuthProvider;
 import com.example.wnabudgetbackend.model.User;
 import com.example.wnabudgetbackend.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -56,5 +54,18 @@ public class AuthController {
         response.setToken(token);
         response.setUser_id(user.getId());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/validate")
+    public ResponseEntity<?> validateToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+
+            if (jwtUtil.validateToken(token)) {
+                return ResponseEntity.ok().build();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
     }
 }

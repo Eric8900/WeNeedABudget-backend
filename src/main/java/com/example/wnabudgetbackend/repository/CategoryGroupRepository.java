@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface CategoryGroupRepository extends JpaRepository<CategoryGroup, UUID> {
-    List<CategoryGroup> findByUserId(UUID userId);
+    List<CategoryGroup> findAllByUserIdOrderByNameAsc(UUID userId);
 }

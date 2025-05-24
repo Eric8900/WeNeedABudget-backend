@@ -1,6 +1,7 @@
 package com.example.wnabudgetbackend.controller;
 
 import com.example.wnabudgetbackend.dto.CategoryGroupRequest;
+import com.example.wnabudgetbackend.dto.patch.CategoryGroupPatch;
 import com.example.wnabudgetbackend.service.CategoryGroupService;
 import com.example.wnabudgetbackend.config.SecurityUtil;
 import org.springframework.http.HttpStatus;
@@ -53,12 +54,15 @@ public class CategoryGroupController {
         return ResponseEntity.ok(categoryGroupService.getGroupsByUser(userId));
     }
 
-    @PutMapping
-    public ResponseEntity<?> updateGroup(@RequestBody CategoryGroupRequest request) {
-        if (!securityUtil.isAuthorized(request.getUser_id())) {
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> patchGroup(
+            @PathVariable UUID id,
+            @RequestBody CategoryGroupPatch patch
+    ) {
+        if (patch.getUser_id() == null || !securityUtil.isAuthorized(patch.getUser_id())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
         }
-        return ResponseEntity.ok(categoryGroupService.updateGroup(request));
+        return ResponseEntity.ok(categoryGroupService.patchGroup(id, patch));
     }
 
     @DeleteMapping("/{id}")

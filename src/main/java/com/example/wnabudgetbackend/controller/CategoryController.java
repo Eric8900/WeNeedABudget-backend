@@ -1,6 +1,7 @@
 package com.example.wnabudgetbackend.controller;
 
 import com.example.wnabudgetbackend.dto.CategoryRequest;
+import com.example.wnabudgetbackend.dto.patch.CategoryPatch;
 import com.example.wnabudgetbackend.service.CategoryService;
 import com.example.wnabudgetbackend.config.SecurityUtil;
 import org.springframework.http.HttpStatus;
@@ -53,17 +54,25 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.getCategoriesByUser(userId));
     }
 
-    @GetMapping("/group/{groupId}")
-    public ResponseEntity<?> getCategoriesByGroup(@PathVariable UUID groupId) {
-        return ResponseEntity.ok(categoryService.getCategoriesByGroup(groupId));
-    }
-
-    @PutMapping
-    public ResponseEntity<?> updateCategory(@RequestBody CategoryRequest request) {
-        if (!securityUtil.isAuthorized(request.getUser_id())) {
+    @GetMapping("/left-to-assign/{userId}")
+    public ResponseEntity<?> getMoneyLeftToAssign(@PathVariable UUID userId) {
+        if (!securityUtil.isAuthorized(userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
         }
-        return ResponseEntity.ok(categoryService.updateCategory(request));
+        return ResponseEntity.ok(categoryService.getMoneyLeftToAssign(userId));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> patchCategory(
+            @PathVariable UUID id,
+            @RequestBody CategoryPatch patch
+    ) {
+
+        if (patch.getUser_id() == null || !securityUtil.isAuthorized(patch.getUser_id())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+
+        return ResponseEntity.ok(categoryService.patchCategory(id, patch));
     }
 
     @DeleteMapping("/{id}")

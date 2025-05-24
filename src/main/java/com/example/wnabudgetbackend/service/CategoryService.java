@@ -1,14 +1,17 @@
 package com.example.wnabudgetbackend.service;
 
 import com.example.wnabudgetbackend.dto.CategoryRequest;
+import com.example.wnabudgetbackend.dto.patch.CategoryPatch;
 import com.example.wnabudgetbackend.model.Category;
 import com.example.wnabudgetbackend.model.CategoryGroup;
 import com.example.wnabudgetbackend.model.User;
 import com.example.wnabudgetbackend.repository.CategoryGroupRepository;
 import com.example.wnabudgetbackend.repository.CategoryRepository;
 import com.example.wnabudgetbackend.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,13 +23,15 @@ public class CategoryService {
     private final CategoryRepository categoryRepo;
     private final UserRepository userRepo;
     private final CategoryGroupRepository groupRepo;
+    private final AccountService accountService;
 
     public CategoryService(CategoryRepository categoryRepo,
                            UserRepository userRepo,
-                           CategoryGroupRepository groupRepo) {
+                           CategoryGroupRepository groupRepo, AccountService accountService) {
         this.categoryRepo = categoryRepo;
         this.userRepo = userRepo;
         this.groupRepo = groupRepo;
+        this.accountService = accountService;
     }
 
     public CategoryRequest createCategory(CategoryRequest request) {
@@ -46,6 +51,8 @@ public class CategoryService {
         category.setName(request.getName());
         category.setBudgetedAmount(request.getBudgetedAmount());
         category.setActivity(request.getActivity());
+        category.setMonth(request.getMonth());
+        category.setYear(request.getYear());
         category.setAvailable(request.getBudgetedAmount().add(request.getActivity()));
 
         category = categoryRepo.save(category);
@@ -58,28 +65,32 @@ public class CategoryService {
     }
 
     public List<CategoryRequest> getCategoriesByUser(UUID userId) {
-        return categoryRepo.findByUserId(userId).stream()
+        return categoryRepo.findByUserIdOrderByNameAsc(userId).stream()
                 .map(CategoryRequest::new)
                 .collect(Collectors.toList());
     }
 
-    public List<CategoryRequest> getCategoriesByGroup(UUID groupId) {
-        return categoryRepo.findByGroupId(groupId).stream()
-                .map(CategoryRequest::new)
-                .collect(Collectors.toList());
+    public BigDecimal getMoneyLeftToAssign(UUID userId) {
+        List<Category> categories = categoryRepo.findByUserId(userId);
+        BigDecimal moneyLeft = accountService.getTotalMoneyInAccounts(userId);
+        for (Category category : categories) {
+            moneyLeft = moneyLeft.subtract(category.getBudgetedAmount());
+        }
+        return moneyLeft;
     }
 
-    public CategoryRequest updateCategory(CategoryRequest request) {
-        Category category = categoryRepo.findById(request.getId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+    public CategoryRequest patchCategory(UUID id, CategoryPatch patch) {
+        Category cat = categoryRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
 
-        category.setName(request.getName());
-        category.setBudgetedAmount(request.getBudgetedAmount());
-        category.setActivity(request.getActivity());
-        category.setAvailable(request.getBudgetedAmount().add(request.getActivity()));
+        // update ONLY if client sents a value
+        if (patch.getName() != null)            cat.setName(patch.getName());
+        if (patch.getBudgetedAmount() != null)  cat.setBudgetedAmount(patch.getBudgetedAmount());
+        if (patch.getActivity() != null)        cat.setActivity(patch.getActivity());
+        if (patch.getAvailable() != null)       cat.setAvailable(patch.getAvailable());
 
-        category = categoryRepo.save(category);
-        return new CategoryRequest(category);
+        cat = categoryRepo.save(cat);
+        return new CategoryRequest(cat);
     }
 
     public void deleteCategory(UUID id) {

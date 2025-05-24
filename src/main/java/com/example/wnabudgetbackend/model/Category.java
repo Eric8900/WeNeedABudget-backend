@@ -28,6 +28,12 @@ public class Category {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
+    private int month;
+
+    @Column(nullable = false)
+    private int year;
+
     private BigDecimal budgetedAmount = BigDecimal.ZERO;
     private BigDecimal activity = BigDecimal.ZERO;
     private BigDecimal available = BigDecimal.ZERO;

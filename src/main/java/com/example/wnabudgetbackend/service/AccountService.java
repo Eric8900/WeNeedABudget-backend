@@ -7,6 +7,7 @@ import com.example.wnabudgetbackend.repository.AccountRepository;
 import com.example.wnabudgetbackend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -69,5 +70,15 @@ public class AccountService {
 
     public void deleteAccount(UUID id) {
         accountRepository.deleteById(id);
+    }
+
+    // HELPERS
+    public BigDecimal getTotalMoneyInAccounts(UUID id) {
+        List<Account> accounts = accountRepository.findByUserId(id);
+        BigDecimal totalMoney = BigDecimal.ZERO;
+        for (Account account : accounts) {
+            totalMoney = totalMoney.add(account.getBalance());
+        }
+        return totalMoney;
     }
 }
