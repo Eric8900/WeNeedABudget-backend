@@ -15,7 +15,7 @@ WNAB is a CRUD budgeting app for creating smart budgets where every dollar of yo
 - JWT + OAuth
 - AWS RDS
 - AWS EC2 maybe
-- ~AWS Lambda~
+- ~AWS Lambda~ (Works but too slow)
 - ~AWS API Gateway~
 
 ## Database Structure
