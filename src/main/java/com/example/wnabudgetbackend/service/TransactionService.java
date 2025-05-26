@@ -1,12 +1,14 @@
 package com.example.wnabudgetbackend.service;
 
 import com.example.wnabudgetbackend.dto.TransactionRequest;
+import com.example.wnabudgetbackend.dto.TransactionTableRequest;
 import com.example.wnabudgetbackend.model.*;
 import com.example.wnabudgetbackend.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,12 +30,6 @@ public class TransactionService {
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
         this.categoryRepository = categoryRepository;
-    }
-
-    public UUID getAccountUserId(UUID accountId) {
-        return accountRepository.findById(accountId)
-                .map(account -> account.getUser().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
     }
 
     public TransactionRequest createTransaction(TransactionRequest request) {
@@ -60,14 +56,16 @@ public class TransactionService {
         tx.setCleared(request.isCleared());
         tx.setDate(LocalDate.now());
 
-        // Update account balance
-        account.setBalance(account.getBalance().add(tx.getAmount()));
-        accountRepository.save(account);
+        if (tx.isCleared()) {
+            // Update account balance if CLEARED
+            account.setBalance(account.getBalance().add(tx.getAmount()));
+            accountRepository.save(account);
 
-        // Update category activity and available
-        category.setActivity(category.getActivity().add(tx.getAmount()));
-        category.setAvailable(category.getAvailable().add(tx.getAmount()));
-        categoryRepository.save(category);
+            // Update category activity and available if CLEARED
+            category.setActivity(category.getActivity().add(tx.getAmount()));
+            category.setAvailable(category.getAvailable().add(tx.getAmount()));
+            categoryRepository.save(category);
+        }
 
         tx = transactionRepository.save(tx);
         return new TransactionRequest(tx);
@@ -78,44 +76,82 @@ public class TransactionService {
                 .map(TransactionRequest::new);
     }
 
-    public List<TransactionRequest> getTransactionsByUser(UUID userId) {
-        return transactionRepository.findByUserId(userId).stream()
-                .map(TransactionRequest::new)
-                .collect(Collectors.toList());
+    public List<TransactionTableRequest> getTransactionsByAccountAndUserId(UUID accountId, UUID userId) {
+        List<Transaction> transactions = transactionRepository.findByAccountIdAndUserIdOrderByAmountAsc(accountId, userId);
+        List<TransactionTableRequest> ret = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            ret.add(new TransactionTableRequest(
+                    transaction.getId(),
+                    transaction.getUser().getId(),
+                    transaction.getAccount().getName(),
+                    transaction.getCategory().getName(),
+                    transaction.getAmount(),
+                    transaction.getPayee(),
+                    transaction.getMemo(),
+                    transaction.isCleared(),
+                    transaction.getDate()
+            ));
+        }
+        return ret;
     }
 
-    public List<TransactionRequest> getTransactionsByAccount(UUID accountId) {
-        return transactionRepository.findByAccountId(accountId).stream()
-                .map(TransactionRequest::new)
-                .collect(Collectors.toList());
-    }
-
-    public TransactionRequest updateTransaction(UUID id, TransactionRequest updatedTx) {
-        userRepository.findById(updatedTx.getUser_id())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Account account = accountRepository.findById(updatedTx.getAccount_id())
-                .orElseThrow(() -> new RuntimeException("Account not found"));
-
-        Category category = categoryRepository.findById(updatedTx.getCategory_id())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-
+    public TransactionRequest updateTransactionChecked(UUID id) {
         Transaction tx = transactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transaction not found"));
+        Account account = accountRepository.findById(tx.getAccount().getId())
+                .orElseThrow(() -> new RuntimeException("Account not found"));
 
-        tx.setAmount(updatedTx.getAmount());
-        tx.setPayee(updatedTx.getPayee());
-        tx.setMemo(updatedTx.getMemo());
+        Category category = categoryRepository.findById(tx.getCategory().getId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
         tx.setDate(LocalDate.now());
-        tx.setCleared(updatedTx.isCleared());
-        tx.setAccount(account);
-        tx.setCategory(category);
+        tx.setCleared(!tx.isCleared());
+
+        if (tx.isCleared()) {
+            // Update account balance if CLEARED
+            account.setBalance(account.getBalance().add(tx.getAmount()));
+            accountRepository.save(account);
+
+            // Update category activity and available if CLEARED
+            category.setActivity(category.getActivity().add(tx.getAmount()));
+            category.setAvailable(category.getAvailable().add(tx.getAmount()));
+            categoryRepository.save(category);
+        }
+        else {
+            // Update account balance if CLEARED
+            account.setBalance(account.getBalance().subtract(tx.getAmount()));
+            accountRepository.save(account);
+
+            // Update category activity and available if CLEARED
+            category.setActivity(category.getActivity().subtract(tx.getAmount()));
+            category.setAvailable(category.getAvailable().subtract(tx.getAmount()));
+            categoryRepository.save(category);
+        }
 
         tx = transactionRepository.save(tx);
         return new TransactionRequest(tx);
     }
 
     public void deleteTransaction(UUID id) {
+        Transaction tx = transactionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+
+        if (tx.isCleared()) {
+            Account account = accountRepository.findById(tx.getAccount().getId())
+                    .orElseThrow(() -> new RuntimeException("Account not found"));
+
+            Category category = categoryRepository.findById(tx.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            // Update account balance if CLEARED
+            account.setBalance(account.getBalance().subtract(tx.getAmount()));
+            accountRepository.save(account);
+
+            // Update category activity and available if CLEARED
+            category.setActivity(category.getActivity().subtract(tx.getAmount()));
+            category.setAvailable(category.getAvailable().subtract(tx.getAmount()));
+            categoryRepository.save(category);
+        }
         transactionRepository.deleteById(id);
     }
+
 }

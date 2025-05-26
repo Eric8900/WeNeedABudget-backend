@@ -31,21 +31,6 @@ public class CategoryGroupController {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryGroupService.createGroup(request));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getGroup(@PathVariable UUID id) {
-        Optional<CategoryGroupRequest> group = categoryGroupService.getGroup(id);
-        if (group.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        UUID userId = group.get().getUser_id();
-        if (!securityUtil.isAuthorized(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
-        }
-
-        return ResponseEntity.ok(group.get());
-    }
-
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getGroupsByUser(@PathVariable UUID userId) {
         if (!securityUtil.isAuthorized(userId)) {

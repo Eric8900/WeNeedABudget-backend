@@ -88,6 +88,7 @@ public class CategoryService {
         if (patch.getBudgetedAmount() != null)  cat.setBudgetedAmount(patch.getBudgetedAmount());
         if (patch.getActivity() != null)        cat.setActivity(patch.getActivity());
         if (patch.getAvailable() != null)       cat.setAvailable(patch.getAvailable());
+        else cat.setAvailable(cat.getBudgetedAmount().add(cat.getActivity()));
 
         cat = categoryRepo.save(cat);
         return new CategoryRequest(cat);

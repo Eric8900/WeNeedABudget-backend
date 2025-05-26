@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,8 +36,16 @@ public class TransactionController {
         return "Hi";
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getTransaction(@PathVariable UUID id) {
+    @GetMapping("/account/{accountId}/user/{userId}")
+    public ResponseEntity<?> getTransactionsByAccountAndUserId(@PathVariable UUID accountId, @PathVariable UUID userId) {
+        if (!securityUtil.isAuthorized(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+        return ResponseEntity.ok(transactionService.getTransactionsByAccountAndUserId(accountId, userId));
+    }
+
+    @GetMapping("/update/{id}")
+    public ResponseEntity<?> updateTransactionChecked(@PathVariable UUID id) {
         Optional<TransactionRequest> tx = transactionService.getTransaction(id);
         if (tx.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -45,32 +54,7 @@ public class TransactionController {
         if (!securityUtil.isAuthorized(userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
         }
-        return ResponseEntity.ok(tx.get());
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getTransactionsByUser(@PathVariable UUID userId) {
-        if (!securityUtil.isAuthorized(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
-        }
-        return ResponseEntity.ok(transactionService.getTransactionsByUser(userId));
-    }
-
-    @GetMapping("/account/{accountId}")
-    public ResponseEntity<?> getTransactionsByAccount(@PathVariable UUID accountId) {
-        UUID userId = transactionService.getAccountUserId(accountId); // You must implement this
-        if (!securityUtil.isAuthorized(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
-        }
-        return ResponseEntity.ok(transactionService.getTransactionsByAccount(accountId));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateTransaction(@PathVariable UUID id, @RequestBody TransactionRequest updatedTx) {
-        if (!securityUtil.isAuthorized(updatedTx.getUser_id())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
-        }
-        return ResponseEntity.ok(transactionService.updateTransaction(id, updatedTx));
+        return ResponseEntity.ok(transactionService.updateTransactionChecked(id));
     }
 
     @DeleteMapping("/{id}")
@@ -83,6 +67,6 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
         }
         transactionService.deleteTransaction(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(Map.of("message", "Transaction deleted"));
     }
 }

@@ -39,14 +39,6 @@ public class AccountController {
         return ResponseEntity.ok(accountService.getAccountsByUser(userId));
     }
 
-    @PutMapping
-    public ResponseEntity<?> updateAccount(@RequestBody AccountRequest request) {
-        if (!securityUtil.isAuthorized(request.getUser_id())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
-        }
-        return ResponseEntity.ok(accountService.updateAccount(request.getId(), request));
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<?> updateAccountById(@PathVariable UUID id, @RequestBody AccountRequest request) {
         if (!securityUtil.isAuthorized(request.getUser_id())) {
