@@ -13,9 +13,10 @@ WNAB is a CRUD budgeting app for creating smart budgets where every dollar of yo
 - Java Spring Boot
 - PostgreSQL
 - JWT + OAuth
-- AWS Lambda
 - AWS RDS
-- AWS API Gateway
+- AWS EC2 maybe
+- ~AWS Lambda~
+- ~AWS API Gateway~
 
 ## Database Structure
 <img width="906" alt="image" src="https://github.com/user-attachments/assets/ad69be45-e8c3-4962-a089-8b34eecf6881" />
