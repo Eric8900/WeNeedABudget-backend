@@ -1,6 +1,7 @@
 package com.example.wnabudgetbackend.service;
 
 import com.example.wnabudgetbackend.dto.AccountRequest;
+import com.example.wnabudgetbackend.dto.TransactionTableRequest;
 import com.example.wnabudgetbackend.model.Account;
 import com.example.wnabudgetbackend.model.User;
 import com.example.wnabudgetbackend.repository.AccountRepository;
@@ -18,10 +19,12 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final TransactionService transactionService;
 
-    public AccountService(AccountRepository accountRepository, UserRepository userRepository) {
+    public AccountService(AccountRepository accountRepository, UserRepository userRepository, TransactionService transactionService) {
         this.accountRepository = accountRepository;
         this.userRepository = userRepository;
+        this.transactionService = transactionService;
     }
 
     public AccountRequest createAccount(AccountRequest request) {
@@ -69,6 +72,14 @@ public class AccountService {
     }
 
     public void deleteAccount(UUID id) {
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        List<TransactionTableRequest> transactions = transactionService.getTransactionsByAccountAndUserId(id, account.getUser().getId());
+        for (TransactionTableRequest transactionTableRequest : transactions) {
+            transactionService.deleteTransaction(transactionTableRequest.getId());
+        }
+
         accountRepository.deleteById(id);
     }
 
